@@ -1,0 +1,73 @@
+{
+    "version" : 1,
+    "seismometers" : [
+        {
+            "name" : "shake3d",
+            "listen" : "0.0.0.0:8889",
+            "timeout_s" : "10",
+            "sample_rate" : 100.0,
+            "flows" : [
+                {
+                    "name" : "shake3d-ehz",
+                    "channel" : "EHZ",
+                    "filter" : {
+                        "order" : 8,
+                        "cutoff" : 4,
+                        "offset": 16384.0,
+                        "trigger_level" : 50000.0,
+                        "reset_level" : 2500.0,
+                        "gain" : 1.0,
+                        "dc_alpha" : 0.99,
+                        "energy_alpha" : 0.995
+                    },
+                    "actions" : {
+                        "mqtt_topic" : "seismo/0/ehz/lpf_alert",
+                        "mqtt_trigger_payload" : "ON",
+                        "mqtt_reset_payload" : "OFF",
+
+                        "mqtt_available_topic" : "seismo/0/ehz/available",
+                        "mqtt_available_payload" : "ON",
+                        "mqtt_unavailable_payload" : "OFF",
+
+                        "available_cmd" : "/usr/local/bin/shake3d-available",
+                        "trigger_cmd" : "/usr/local/bin/shake3d-triggered",
+                        "reset_cmd" : "/usr/local/bin/shake3d-reset",
+                        "unavailable_cmd" : "/usr/local/bin/shake3d-available"
+                    }
+                }
+            ]
+        },
+        {
+            "name" : "shake4d",
+            "listen" : "0.0.0.0:8890",
+            "timeout_s" : "10",
+            "flows" : [
+                {
+                    "name" : "shake4d-enz",
+                    "channel" : "ENZ",
+                    "filter" : {
+                        "order" : 8,
+                        "cutoff" : 4,
+                        "offset": 3200.0,
+                        "trigger_level" : 5000.0,
+                        "reset_level" : 2500.0,
+                        "gain" : 1.0,
+                        "sample_rate" : 100.0,
+                        "dc_alpha" : 0.99,
+                        "energy_alpha" : 0.995
+                     },
+                     "actions" : {
+                        "mqtt_topic" : "seismo/1/enz/lpf_alert",
+                        "mqtt_available_topic" : "seismo/1/enz/available"
+                     }
+                }
+            ]
+        }
+    ],
+    "mqtt" : {
+        "host" : "localhost",
+        "port" : 1883,
+        "username" : "username",
+        "password" : "password"
+    }
+}

@@ -1,0 +1,23 @@
+[package]
+name = "rs-udp"
+version = "2.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "seismo"
+path = "src/main.rs"
+doc = false
+
+[dependencies]
+anyhow = "1.0.94"
+clap = { version = "4.5.23", features = ["derive"] }
+ndarray = "0.16.1"
+num-traits = "0.2.19"
+rumqttc = "0.24.0"
+sci-rs = "0.4.1"
+serde = { version = "1.0.216", features = [ "derive" ] }
+serde_json = "1.0.133"
+thiserror = "2.0.6"
+tokio = { version = "1.42.0", features = [ "full" ] }
+variant_count = "1.1.0"
