@@ -105,6 +105,7 @@ impl InstrumentLoop {
         for flow in self.flows_for_channel[data.channel as usize].iter_mut() {
             if ! already_active {
                 flow.available(&self.action_channel).await?;
+                flow.reset(&self.action_channel).await?;
             }
             flow.process(&data, &self.action_channel).await?;
         }
@@ -148,7 +149,7 @@ impl FlowState {
     }
 
     pub async fn reset(&mut self, channel: &OutChannel) -> Result<(), LoopError> {
-        if self.triggered.unwrap_or(false) {
+        if self.triggered.unwrap_or(true) {
             self.send_event(Event::Reset, channel).await?;
             self.triggered.replace(false);
         }
