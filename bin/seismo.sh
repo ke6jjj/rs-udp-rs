@@ -25,12 +25,12 @@ rcvar=seismo_enable
 
 load_rc_config $name
 
-: ${_enable:="NO"}
 : ${seismo__user:="nobody"}
 : ${seismo_debug:="NO"}
 : ${seismo_executable:="/usr/local/bin/seismo"}
 : ${seismo_pidfile:="/var/run/seismo.pid"}
 : ${seismo_conf:="/usr/local/etc/seismo/seismo.config"}
+: ${seismo_env_file:=""}
 
 pidfile="${seismo_pidfile}"
 command="/usr/sbin/daemon"
@@ -38,8 +38,10 @@ command_args="-c -P ${pidfile} -u ${seismo__user}"
 process_args="-c ${seismo_conf}"
 if [ "${seismo_debug}" == "NO" ]; then
         command_args="${command_args} -f"
-else
-	process_args="${process_args} -d"
+fi
+
+if [ ! -z "${seismo_env_file}" -a -f "${seismo_env_file}" ]; then
+	. ${seismo_env_file} || echo 2>&1 "can't read" "${seismo_env_file}"
 fi
 
 command_args="${command_args} ${seismo_executable} ${process_args}"

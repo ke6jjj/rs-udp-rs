@@ -12,6 +12,7 @@ doc = false
 [dependencies]
 anyhow = "1.0.94"
 clap = { version = "4.5.23", features = ["derive"] }
+config = { version = "0.15.11", features = ["json"] }
 ndarray = "0.16.1"
 num-traits = "0.2.19"
 rumqttc = "0.24.0"
