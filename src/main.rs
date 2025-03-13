@@ -3,23 +3,23 @@
 use rs_udp::config::{Config, FlowConfig, SeismometerConfig};
 use rs_udp::datasource::DataSource;
 use rs_udp::overrides::{FlowTiedPath, SeismometerTiedPath};
-use rs_udp::session::{ActionLoop, InstrumentLoop};
 use rs_udp::session::{action_loop_message_channel, SensorFlow, MQTT};
+use rs_udp::session::{ActionLoop, InstrumentLoop};
 use rs_udp::session::{AlarmSession, OutChannel};
 
 use anyhow::{Context, Result};
 use clap::Parser;
 use std::collections::HashMap;
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
 #[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(name = env!("CARGO_BIN_NAME"))]
 /// Real-time seismometer monitor
-/// 
+///
 /// JSON Configuration Syntax:
-/// 
-/// Config = { 
+///
+/// Config = {
 ///     "seismometers" : [ Seismometer+ ],
 ///     ( "mqtt" : MQTT )*
 /// };
@@ -87,15 +87,25 @@ type SeismometerRedirects<'a> = HashMap<&'a str, &'a SeismometerTiedPath>;
 // Stream output inspections by flow name.
 type FlowDumps<'a> = HashMap<&'a str, &'a FlowTiedPath>;
 
+/// Nearly all configuration items can be overridden from the environment.
+/// To do so, one must set an environment variable named in such a way
+/// that it will be picked up by this configuration builder. Use this
+/// process to build up the correct name:
+///
+/// 1. Start with the application prefix. In this case "SEISMO".
+/// 2. Append two underscores (i.e. "__").
+/// 3. Append the item or section name, in uppercase (e.g. "MQTT").
+/// 4. If further depth is required, go to step 2.
+///
+/// To set the MQTT password, for example, one would use the environment
+/// variable name "SEISMO__MQTT__PASSWORD". `SEISMO__MQTT__PASSWORD=pass`
+///
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let config = fs::read_to_string(&cli.config_path)
-        .context("Failed to read config file")
-        .and_then(|json| {
-            serde_json::from_str::<Config>(&json).context("Failed to parse config JSON")
-        })?;
+    let config =
+        Config::new(&cli.config_path, "SEISMO", "__").context("Failed to read config file")?;
 
     let session = configure_seismo_session(&cli, &config).await?;
     session.run().await?;
@@ -114,15 +124,16 @@ async fn configure_seismo_session<'a>(
     let (tx_chan, rx_chan) = action_loop_message_channel();
     let MQTT(mqtt_client, mqtt_loop) = MQTT::from_config(config);
     let mut action_loop = ActionLoop::new(rx_chan, mqtt_client);
-    let seismometer_loops =
-        configure_seismometers_and_actions(config, &mut action_loop, tx_chan, source_overrides, dump_requests)
-            .await?;
+    let seismometer_loops = configure_seismometers_and_actions(
+        config,
+        &mut action_loop,
+        tx_chan,
+        source_overrides,
+        dump_requests,
+    )
+    .await?;
 
-    let result = AlarmSession::new(
-        seismometer_loops,
-        action_loop,
-        mqtt_loop,
-    );
+    let result = AlarmSession::new(seismometer_loops, action_loop, mqtt_loop);
     Ok(result)
 }
 
