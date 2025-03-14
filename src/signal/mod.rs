@@ -3,12 +3,12 @@ mod block;
 mod filter;
 mod evaluate;
 
-use block::{lp_filter::LowPassFilter, affine::AffineTransform, one_pole::OnePoleLowPassFilter, rectify::Rectify};
+use block::{lp_filter::LowPassFilter, affine::AffineTransform, one_pole::OnePoleFilter, rectify::Rectify};
 use evaluate::threshold::ThresholdTrigger;
 
 pub use block::lp_filter::{LowPassFilterBuilder, LPFError};
 pub use block::affine::{AffineTransformBuilder, AffineError};
-pub use block::one_pole::{OnePoleLowPassFilterBuilder, OnePoleError};
+pub use block::one_pole::{OnePoleFilterBuilder, OnePoleError, FilterType as OnePoleFilterType};
 pub use block::rectify::{RectifyBuilder, RectifyType, RectifyError};
 pub use evaluate::threshold::{ThresholdTriggerBuilder, ThresholdError};
 
@@ -44,7 +44,7 @@ pub trait EventBlock<T> where T: RealField + Float + Copy + Sum + One + Zero + S
 pub enum ProcessingBlock<T> where T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,{
     AffineTransform(Box<AffineTransform<T>>),
     LowPassFilter(Box<LowPassFilter<T>>),
-    OnePoleLowPassFilter(Box<OnePoleLowPassFilter<T>>),
+    OnePoleFilter(Box<OnePoleFilter<T>>),
     Rectify(Rectify),
 }
 
@@ -53,7 +53,7 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock
         match self {
             ProcessingBlock::AffineTransform(a) => a.process(input),
             ProcessingBlock::LowPassFilter(l) => l.process(input),
-            ProcessingBlock::OnePoleLowPassFilter(o) => o.process(input),
+            ProcessingBlock::OnePoleFilter(o) => o.process(input),
             ProcessingBlock::Rectify(r) => r.process(input),
         }
     }
@@ -62,7 +62,7 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock
         match self {
             ProcessingBlock::AffineTransform(a) => a.reset(),
             ProcessingBlock::LowPassFilter(l) => l.reset(),
-            ProcessingBlock::OnePoleLowPassFilter(o) => o.reset(),
+            ProcessingBlock::OnePoleFilter(o) => o.reset(),
             ProcessingBlock::Rectify(r) => <Rectify as SignalBlock<T>>::reset(r),
         }
     }
@@ -97,9 +97,9 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> From<LowPas
     }
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> From<OnePoleLowPassFilter<T>> for ProcessingBlock<T> {
-    fn from(value: OnePoleLowPassFilter<T>) -> Self {
-        Self::OnePoleLowPassFilter(Box::new(value))
+impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> From<OnePoleFilter<T>> for ProcessingBlock<T> {
+    fn from(value: OnePoleFilter<T>) -> Self {
+        Self::OnePoleFilter(Box::new(value))
     }
 }
 

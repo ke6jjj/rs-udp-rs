@@ -3,9 +3,9 @@ use std::path::PathBuf;
 use crate::config::{FilterConfig, FlowConfig};
 use crate::signal::{
     AffineError, AffineTransformBuilder, Event, EventBlock, EventGeneratingBlock, FilterObserver,
-    FilterStep, LPFError, LowPassFilterBuilder, ObserverError, OnePoleError,
-    OnePoleLowPassFilterBuilder, ProcessingBlock, RectifyBuilder, RectifyType, SignalBlock,
-    ThresholdError, ThresholdTriggerBuilder,
+    FilterStep, LPFError, LowPassFilterBuilder, ObserverError, OnePoleError, OnePoleFilterBuilder,
+    OnePoleFilterType, ProcessingBlock, RectifyBuilder, RectifyType, SignalBlock, ThresholdError,
+    ThresholdTriggerBuilder,
 };
 use thiserror::Error;
 
@@ -115,8 +115,9 @@ fn trigger_from_config(
         .order(filter.order as usize)
         .build()?
         .into();
-    let dc_remove: ProcessingBlock<f32> = OnePoleLowPassFilterBuilder::new()
+    let dc_remove: ProcessingBlock<f32> = OnePoleFilterBuilder::new()
         .alpha(filter.dc_alpha)
+        .pass(OnePoleFilterType::HighPass)
         .build()
         .map_err(FlowError::DCOnePole)?
         .into();
@@ -125,8 +126,9 @@ fn trigger_from_config(
         .build()
         .expect("how did you screw this one up?")
         .into();
-    let ac_remove: ProcessingBlock<f32> = OnePoleLowPassFilterBuilder::new()
+    let ac_remove: ProcessingBlock<f32> = OnePoleFilterBuilder::new()
         .alpha(filter.energy_alpha)
+        .pass(OnePoleFilterType::LowPass)
         .build()
         .map_err(FlowError::ACOnePole)?
         .into();
