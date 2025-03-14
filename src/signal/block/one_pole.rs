@@ -11,16 +11,11 @@ use crate::signal::SignalBlock;
 
 use super::super::filter::lfilter::{lfilt_dyn, Ba};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum FilterType {
+    #[default]
     LowPass,
     HighPass,
-}
-
-impl Default for FilterType {
-    fn default() -> Self {
-        FilterType::LowPass
-    }
 }
 
 #[derive(Error, Debug)]
@@ -29,15 +24,19 @@ pub enum OnePoleError {
     AlphaOutOfRange,
 }
 
-/// One-pole, low pass, "alpha/beta" filter.
+/// One-pole, "alpha/beta" filter.
+///
+/// In Low-Pass form:
 ///
 /// A filter that decays its memory by some portion (alpha)
 /// and incorporates the incoming sample by the remainder (beta).
 ///
-/// Signal flow (per sample)
+/// In High-Pass form:
 ///
-/// 1. Send through low-pass filter.
-pub struct OnePoleLowPassFilter<T>
+/// A filter that decays its memory by some portion (alpha)
+/// and incorporates the incoming sample by the remainder (beta) then
+/// subtracts the filter output from the input.
+pub struct OnePoleFilter<T>
 where
     T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
@@ -46,7 +45,7 @@ where
 }
 
 impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock<T>
-    for OnePoleLowPassFilter<T>
+    for OnePoleFilter<T>
 {
     fn reset(&mut self) {
         self.memory = self.taps.clone();
@@ -57,22 +56,20 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock
     }
 }
 
-pub struct OnePoleLowPassFilterBuilder<T> {
+pub struct OnePoleFilterBuilder<T> {
     alpha: Option<T>,
     filter_type: Option<FilterType>,
 }
 
 impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> Default
-    for OnePoleLowPassFilterBuilder<T>
+    for OnePoleFilterBuilder<T>
 {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand>
-    OnePoleLowPassFilterBuilder<T>
-{
+impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> OnePoleFilterBuilder<T> {
     pub fn new() -> Self {
         Self {
             alpha: None,
@@ -94,7 +91,7 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand>
     }
 
     /// Construct a filter block.
-    pub fn build(self) -> Result<OnePoleLowPassFilter<T>, OnePoleError> {
+    pub fn build(self) -> Result<OnePoleFilter<T>, OnePoleError> {
         let alpha = self.alpha.unwrap_or(T::zero());
         if alpha < T::zero() || alpha > T::one() {
             return Err(OnePoleError::AlphaOutOfRange);
@@ -120,7 +117,7 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand>
         let b = [b0, b1];
         let zi0 = T::zero();
         let ba = Ba { b, a1: a1, zi0 };
-        let mut result = OnePoleLowPassFilter {
+        let mut result = OnePoleFilter {
             taps: ba.clone(),
             memory: ba,
         };
@@ -131,11 +128,11 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand>
 
 #[cfg(test)]
 mod tests {
-    use super::{OnePoleError, OnePoleLowPassFilterBuilder};
+    use super::{OnePoleError, OnePoleFilterBuilder};
 
     #[test]
     fn test_one() {
-        OnePoleLowPassFilterBuilder::new()
+        OnePoleFilterBuilder::new()
             .alpha(0.99 as f32)
             .pass(super::FilterType::LowPass)
             .build()
@@ -144,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_fails() {
-        let err = OnePoleLowPassFilterBuilder::new()
+        let err = OnePoleFilterBuilder::new()
             .alpha(2.0 as f32)
             .pass(super::FilterType::HighPass)
             .build()
