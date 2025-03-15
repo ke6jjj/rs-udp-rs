@@ -113,11 +113,9 @@ impl<'a> Iterator for TimeoutIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         for channel_state in self.channel_state_iter.by_ref() {
-            if channel_state.alive.unwrap_or(true) {
-                if channel_state.as_of.unwrap() < self.timeout_point {
-                    channel_state.alive.replace(false);
-                    return Some(&*channel_state);
-                }
+            if channel_state.alive.unwrap_or(true) && channel_state.as_of.unwrap() < self.timeout_point {
+                channel_state.alive.replace(false);
+                return Some(&*channel_state);
             }
         }
         None

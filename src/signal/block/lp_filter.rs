@@ -39,8 +39,18 @@ where
     memory: Vec<Sos<T>>,
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock<T>
-    for LowPassFilter<T>
+impl<T> LowPassFilter<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
+{
+    pub fn builder() -> LowPassFilterBuilder<T> {
+        LowPassFilterBuilder::new()
+    }
+}
+
+impl<T> SignalBlock<T> for LowPassFilter<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
     fn reset(&mut self) {
         self.memory = self.taps.clone();
@@ -51,21 +61,17 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock
     }
 }
 
+#[derive(Default)]
 pub struct LowPassFilterBuilder<T> {
     sample_rate_hz: Option<T>,
     cutoff_hz: Option<T>,
     order: Option<usize>,
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> Default
-    for LowPassFilterBuilder<T>
+impl<T> LowPassFilterBuilder<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> LowPassFilterBuilder<T> {
     pub fn new() -> Self {
         Self {
             sample_rate_hz: None,

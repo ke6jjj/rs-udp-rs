@@ -26,31 +26,36 @@ where
     gain: T,
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock<T>
-    for AffineTransform<T>
+impl<T> AffineTransform<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
+{
+    pub fn builder() -> AffineTransformBuilder<T> {
+        AffineTransformBuilder::new()
+    }
+}
+
+impl<T> SignalBlock<T> for AffineTransform<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
     fn reset(&mut self) {}
 
     fn process(&mut self, input: &ndarray::Array1<T>) -> ndarray::Array1<T> {
-        let result = (input - self.offset) * self.gain;
-        result
+        (input - self.offset) * self.gain
     }
 }
 
+#[derive(Default)]
 pub struct AffineTransformBuilder<T> {
     offset: Option<T>,
     gain: Option<T>,
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> Default
-    for AffineTransformBuilder<T>
+impl<T> AffineTransformBuilder<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> AffineTransformBuilder<T> {
     pub fn new() -> Self {
         Self {
             offset: None,

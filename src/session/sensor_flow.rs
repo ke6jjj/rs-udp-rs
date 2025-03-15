@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use crate::config::{FilterConfig, FlowConfig};
 use crate::signal::{
-    AffineError, AffineTransformBuilder, Event, EventBlock, EventGeneratingBlock, FilterObserver,
-    FilterStep, LPFError, LowPassFilterBuilder, ObserverError, OnePoleError, OnePoleFilterBuilder,
-    OnePoleFilterType, ProcessingBlock, RectifyBuilder, RectifyType, SignalBlock, ThresholdError,
-    ThresholdTriggerBuilder,
+    AffineError, AffineTransform, Event, EventBlock, EventGeneratingBlock, FilterObserver,
+    FilterStep, LPFError, LowPassFilter, ObserverError, OnePoleError, OnePoleFilter,
+    OnePoleFilterType, ProcessingBlock, Rectify, RectifyType, SignalBlock, ThresholdError,
+    ThresholdTrigger,
 };
 use thiserror::Error;
 
@@ -104,35 +104,35 @@ fn trigger_from_config(
     sample_rate_hz: f32,
     filter: &FilterConfig,
 ) -> Result<ClassicTrigger, FlowError> {
-    let affine: ProcessingBlock<f32> = AffineTransformBuilder::new()
+    let affine: ProcessingBlock<f32> = AffineTransform::builder()
         .gain(filter.gain)
         .offset(filter.offset)
         .build()?
         .into();
-    let lpf: ProcessingBlock<f32> = LowPassFilterBuilder::new()
+    let lpf: ProcessingBlock<f32> = LowPassFilter::builder()
         .sample_rate(sample_rate_hz)
         .cutoff_hz(filter.cutoff)
         .order(filter.order as usize)
         .build()?
         .into();
-    let dc_remove: ProcessingBlock<f32> = OnePoleFilterBuilder::new()
+    let dc_remove: ProcessingBlock<f32> = OnePoleFilter::builder()
         .alpha(filter.dc_alpha)
         .pass(OnePoleFilterType::HighPass)
         .build()
         .map_err(FlowError::DCOnePole)?
         .into();
-    let square: ProcessingBlock<f32> = RectifyBuilder::new()
+    let square: ProcessingBlock<f32> = Rectify::builder()
         .rectify(RectifyType::Square)
         .build()
         .expect("how did you screw this one up?")
         .into();
-    let ac_remove: ProcessingBlock<f32> = OnePoleFilterBuilder::new()
+    let ac_remove: ProcessingBlock<f32> = OnePoleFilter::builder()
         .alpha(filter.energy_alpha)
         .pass(OnePoleFilterType::LowPass)
         .build()
         .map_err(FlowError::ACOnePole)?
         .into();
-    let threshold: EventGeneratingBlock<f32> = ThresholdTriggerBuilder::new()
+    let threshold: EventGeneratingBlock<f32> = ThresholdTrigger::builder()
         .trigger(filter.trigger_level)
         .reset(filter.reset_level)
         .holdoff(filter.holdoff)

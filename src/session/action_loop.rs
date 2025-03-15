@@ -176,7 +176,7 @@ impl<'a> ActionLoop<'a> {
 async fn cmd_run(cmd: &Option<PathBuf>, arg1: &str, arg2: &str) -> Result<(), ActionLoopError> {
     if let Some(path) = cmd.as_ref() {
         let _ = Command::new(path)
-            .args(&[ arg1, arg2 ])
+            .args([ arg1, arg2 ])
             .status().await?;
     }
     Ok(())

@@ -9,8 +9,9 @@ pub use sci_rs::na::RealField;
 
 use crate::signal::SignalBlock;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum RectifyType {
+    #[default]
     Absolute,
     Square,
 }
@@ -36,7 +37,16 @@ pub struct Rectify {
     rectify_type: RectifyType,
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock<T> for Rectify {
+impl Rectify {
+    pub fn builder() -> RectifyBuilder {
+        RectifyBuilder::new()
+    }
+}
+
+impl<T> SignalBlock<T> for Rectify
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
+{
     fn reset(&mut self) {}
 
     fn process(&mut self, input: &ndarray::Array1<T>) -> ndarray::Array1<T> {
@@ -47,14 +57,9 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> SignalBlock
     }
 }
 
+#[derive(Default)]
 pub struct RectifyBuilder {
     rectify_type: Option<RectifyType>,
-}
-
-impl Default for RectifyBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl RectifyBuilder {
@@ -72,7 +77,7 @@ impl RectifyBuilder {
 
     /// Construct a trigger.
     pub fn build(self) -> Result<Rectify, RectifyError> {
-        let rectify_type = self.rectify_type.unwrap_or(RectifyType::Absolute);
+        let rectify_type = self.rectify_type.unwrap_or_default();
         Ok(Rectify { rectify_type })
     }
 }

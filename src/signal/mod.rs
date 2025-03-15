@@ -3,16 +3,11 @@ mod debug;
 mod evaluate;
 mod filter;
 
-use block::{
-    affine::AffineTransform, lp_filter::LowPassFilter, one_pole::OnePoleFilter, rectify::Rectify,
-};
-use evaluate::threshold::ThresholdTrigger;
-
-pub use block::affine::{AffineError, AffineTransformBuilder};
-pub use block::lp_filter::{LPFError, LowPassFilterBuilder};
-pub use block::one_pole::{FilterType as OnePoleFilterType, OnePoleError, OnePoleFilterBuilder};
-pub use block::rectify::{RectifyBuilder, RectifyError, RectifyType};
-pub use evaluate::threshold::{ThresholdError, ThresholdTriggerBuilder};
+pub use block::affine::{AffineError, AffineTransform, AffineTransformBuilder};
+pub use block::lp_filter::{LPFError, LowPassFilter, LowPassFilterBuilder};
+pub use block::one_pole::{OnePoleError, OnePoleFilter, OnePoleFilterBuilder, OnePoleFilterType};
+pub use block::rectify::{Rectify, RectifyBuilder, RectifyError, RectifyType};
+pub use evaluate::threshold::{ThresholdError, ThresholdTrigger, ThresholdTriggerBuilder};
 
 pub use debug::{FilterObserver, FilterStep, ObserverError};
 
@@ -46,7 +41,7 @@ where
     T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
     fn reset(&mut self);
-    fn process(&mut self, input: &ndarray::Array1<T>, obs: impl FnMut(Event<T>) -> ());
+    fn process(&mut self, input: &ndarray::Array1<T>, obs: impl FnMut(Event<T>));
 }
 
 pub enum ProcessingBlock<T>
@@ -96,7 +91,7 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> EventBlock<
         }
     }
 
-    fn process(&mut self, input: &ndarray::Array1<T>, obs: impl FnMut(Event<T>) -> ()) {
+    fn process(&mut self, input: &ndarray::Array1<T>, obs: impl FnMut(Event<T>)) {
         match self {
             Self::ThresholdTrigger(t) => t.process(input, obs),
         }

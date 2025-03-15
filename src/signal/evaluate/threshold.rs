@@ -30,15 +30,25 @@ where
     processed: usize,
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> EventBlock<T>
-    for ThresholdTrigger<T>
+impl<T> ThresholdTrigger<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
+{
+    pub fn builder() -> ThresholdTriggerBuilder<T> {
+        ThresholdTriggerBuilder::new()
+    }
+}
+
+impl<T> EventBlock<T> for ThresholdTrigger<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
     fn reset(&mut self) {
         self.triggered = false;
         self.processed = 0;
     }
 
-    fn process(&mut self, input: &ndarray::Array1<T>, mut obs: impl FnMut(Event<T>) -> ()) {
+    fn process(&mut self, input: &ndarray::Array1<T>, mut obs: impl FnMut(Event<T>)) {
         for &v in input {
             if self.processed > self.holdoff {
                 if !self.triggered && v > self.trigger {
@@ -55,21 +65,17 @@ impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> EventBlock<
     }
 }
 
+#[derive(Default)]
 pub struct ThresholdTriggerBuilder<T> {
     trigger: Option<T>,
     reset: Option<T>,
     holdoff: Option<usize>,
 }
 
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> Default
-    for ThresholdTriggerBuilder<T>
+impl<T> ThresholdTriggerBuilder<T>
+where
+    T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand,
 {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T: RealField + Float + Copy + Sum + One + Zero + ScalarOperand> ThresholdTriggerBuilder<T> {
     pub fn new() -> Self {
         Self {
             trigger: None,
