@@ -81,9 +81,9 @@ impl<'a> ChannelChecker {
                 let elapsed = from.duration_since(oldest);
                 if elapsed > timeout {
                     // Deadline already exceeded
-                    return Some(Duration::ZERO)
+                    return Some(Duration::ZERO);
                 } else {
-                    return Some(timeout - elapsed)
+                    return Some(timeout - elapsed);
                 }
             }
         }
@@ -113,7 +113,9 @@ impl<'a> Iterator for TimeoutIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         for channel_state in self.channel_state_iter.by_ref() {
-            if channel_state.alive.unwrap_or(true) && channel_state.as_of.unwrap() < self.timeout_point {
+            if channel_state.alive.unwrap_or(true)
+                && channel_state.as_of.unwrap() < self.timeout_point
+            {
                 channel_state.alive.replace(false);
                 return Some(&*channel_state);
             }

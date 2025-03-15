@@ -103,7 +103,7 @@ impl InstrumentLoop {
             .timeouts_by_channel
             .mark_channel_alive(when, data.channel);
         for flow in self.flows_for_channel[data.channel as usize].iter_mut() {
-            if ! already_active {
+            if !already_active {
                 flow.available(&self.action_channel).await?;
                 flow.reset(&self.action_channel).await?;
             }
@@ -120,7 +120,9 @@ impl FlowState {
         post: &OutChannel,
     ) -> Result<(), LoopError> {
         let result = self
-            .flow.trigger.process(&input.data, &mut self.flow.dumper);
+            .flow
+            .trigger
+            .process(&input.data, &mut self.flow.dumper);
         if result.triggered {
             self.triggered(post).await?;
         }

@@ -77,9 +77,7 @@ impl<'a> AlarmSession<'a> {
         Ok(())
     }
 
-    async fn run_actions_loop(
-        action_loop: ActionLoop<'a>
-    ) -> Result<(), AlarmSessionError> {
+    async fn run_actions_loop(action_loop: ActionLoop<'a>) -> Result<(), AlarmSessionError> {
         action_loop.run().await?;
         Ok(())
     }

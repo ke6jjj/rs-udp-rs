@@ -61,7 +61,7 @@ impl<'a> ActionLoop<'a> {
             flows: FlowsMap::new(),
             chan,
             mqtt,
-         }
+        }
     }
 
     /// Introduce a new sensor and its actions to the loop.
@@ -80,7 +80,10 @@ impl<'a> ActionLoop<'a> {
     }
 
     /// Handle an event that has been noted by a particular seismometer.
-    async fn handle_seismometer_event(&mut self, msg: TriggerMessage) -> Result<(), ActionLoopError> {
+    async fn handle_seismometer_event(
+        &mut self,
+        msg: TriggerMessage,
+    ) -> Result<(), ActionLoopError> {
         //
         // Look up the reporting seismometer and see if there are any actions
         // configured for its events.
@@ -115,10 +118,7 @@ impl<'a> ActionLoop<'a> {
                 //
                 Event::Triggered => {
                     tokio::try_join!(
-                        self.mqtt_publish(
-                            &actions.mqtt_topic,
-                            &actions.mqtt_triggered_payload,
-                        ),
+                        self.mqtt_publish(&actions.mqtt_topic, &actions.mqtt_triggered_payload),
                         cmd_run(&actions.trigger_cmd, "triggered", name)
                     )?;
                 }
@@ -129,10 +129,7 @@ impl<'a> ActionLoop<'a> {
                 //
                 Event::Reset => {
                     tokio::try_join!(
-                        self.mqtt_publish(
-                            &actions.mqtt_topic,
-                            &actions.mqtt_reset_payload,
-                        ),
+                        self.mqtt_publish(&actions.mqtt_topic, &actions.mqtt_reset_payload),
                         cmd_run(&actions.reset_cmd, "reset", name)
                     )?;
                 }
@@ -155,7 +152,11 @@ impl<'a> ActionLoop<'a> {
     }
 
     /// Publish a payload over MQTT, but only if so configured.
-    async fn mqtt_publish(&mut self, topic: &Option<String>, payload: &String) -> Result<(), ActionLoopError> {
+    async fn mqtt_publish(
+        &mut self,
+        topic: &Option<String>,
+        payload: &String,
+    ) -> Result<(), ActionLoopError> {
         let config = self.mqtt.as_mut().zip(topic.as_ref());
         if let Some((client, topic)) = config {
             client
@@ -169,15 +170,12 @@ impl<'a> ActionLoop<'a> {
         }
         Ok(())
     }
-
 }
 
 /// Execute an external executable, if so configured.
 async fn cmd_run(cmd: &Option<PathBuf>, arg1: &str, arg2: &str) -> Result<(), ActionLoopError> {
     if let Some(path) = cmd.as_ref() {
-        let _ = Command::new(path)
-            .args([ arg1, arg2 ])
-            .status().await?;
+        let _ = Command::new(path).args([arg1, arg2]).status().await?;
     }
     Ok(())
 }
